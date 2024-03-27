@@ -3,9 +3,11 @@ import cors from 'cors';
 import router from './app/routes';
 import httpStatus from 'http-status';
 import globalErrorHandaller from './app/middleWares/globalErrorHandaller';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.get('/', (req: Request, res: Response) => {
@@ -18,7 +20,6 @@ app.use('/api/v1', router);
 app.use(globalErrorHandaller);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(req);
   res.status(httpStatus.NOT_FOUND).json({
     success: false,
     message: 'API NOT FOUND !',

@@ -1,18 +1,24 @@
 import { Admin, Prisma, userStatus } from '@prisma/client';
 import { searchAbleFields } from './ admin.constant';
-import { paginateHelper } from '../../../helpars/paginateHalpers';
-import prisma from '../../../shared/prisma';
 
-const getAllDataFromDB = async (params: any, options: any) => {
+import prisma from '../../../shared/prisma';
+import { TAdminFilterRequest } from './admin.interface';
+import { TPaginationOptions } from '../../interfaces/pagination';
+import { paginationHelper } from '../../../helpars/paginateHalpers';
+
+const getAllDataFromDB = async (
+  params: TAdminFilterRequest,
+  options: TPaginationOptions
+) => {
   const { searchTerm, ...filterData } = params;
-  const { page, limit, skip } = paginateHelper.calculatePagination(options);
+  const { page, limit, skip } = paginationHelper.calculatePagination(options);
   const andConditon: Prisma.AdminWhereInput[] = [];
 
   if (Object.keys(filterData).length > 0) {
     andConditon.push({
       AND: Object.keys(filterData).map((key) => ({
         [key]: {
-          equals: filterData[key],
+          equals: (filterData as any)[key],
         },
       })),
     });
@@ -89,6 +95,7 @@ const updateDataFromDB = async (
   data: Partial<Admin>
 ): Promise<Admin | null> => {
   //check user is already exists or not
+
   await prisma.admin.findUniqueOrThrow({
     where: {
       id,
