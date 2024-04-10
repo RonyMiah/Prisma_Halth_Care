@@ -22,21 +22,61 @@ const createDoctorSchedule = catchAsync(
     });
   }
 );
-const getAllFromDB = catchAsync(async (req: Request & {user?: IAuthUser}, res: Response) => {
-    const user = req.user as IAuthUser
-  const filters = pick(req.query, ['startDate', 'endDate']);
-  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+const getMySchedule = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user as IAuthUser;
+    const filters = pick(req.query, ['startDate', 'endDate', 'isBooked']);
+    const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
 
-  const result = await DoctorScheduleServices.getAllFromDB(filters, options, user);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: ' Schedule Fatched successfully !!',
-    data: result,
-  });
-});
+    const result = await DoctorScheduleServices.getMySchedule(
+      filters,
+      options,
+      user
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: ' Schedule Fatched successfully !!',
+      data: result,
+    });
+  }
+);
+const getAllSchedule = catchAsync(
+  async (req: Request, res: Response) => {
+    const filters = pick(req.query, ['startDate', 'endDate', 'isBooked']);
+    const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+    const result = await DoctorScheduleServices.getAllSchedule(
+      filters,
+      options
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: ' Schedule Fatched successfully !!',
+      data: result,
+    });
+  }
+);
+
+const deleteFromDB = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user as IAuthUser;
+    const { id } = req.params;
+
+    const result = await DoctorScheduleServices.deleteFromDB(id, user);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: ' Doctor Schedule Deleted successfully !!',
+      data: result,
+    });
+  }
+);
 
 export const DoctorScheduleControllers = {
   createDoctorSchedule,
-  getAllFromDB,
+  getMySchedule,
+  deleteFromDB,
+  getAllSchedule,
 };
