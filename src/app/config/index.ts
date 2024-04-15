@@ -15,6 +15,15 @@ export default {
   reset_pass_link: process.env.RESET_PASS_LINK,
   node_mailer_email: process.env.NODE_MAILER_EMAIL,
   node_mailer_pass: process.env.NODE_MAILER_PASS,
+  ssl: {
+    storeId: process.env.STORE_ID,
+    storePass: process.env.STORE_PASS,
+    successUrl: process.env.SUCCESS_URL,
+    cancleUrl: process.env.CANCLE_URL,
+    failUrl: process.env.Fail_URL,
+    sslPaymentApi: process.env.SSL_PAYMENT_API,
+    sslValidationApi: process.env.SSL_VALIDATION_API,
+  },
 };
 
 //চাইলে আমরা jwt এর সব secret কে একটা object এর বিতরে রাখতে পারি
