@@ -4,12 +4,23 @@ import router from './app/routes';
 import httpStatus from 'http-status';
 import globalErrorHandaller from './app/middleWares/globalErrorHandaller';
 import cookieParser from 'cookie-parser';
+import { AppoinmentServices } from './app/Modules/Appoinment/appoinment.service';
+import cron from 'node-cron';
 
 const app = express();
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+cron.schedule('* * * * *', () => {
+  try {
+    AppoinmentServices.cancleUnpaidAppoinments();
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 app.get('/', (req: Request, res: Response) => {
   res.send({
     Message: 'Ph Helth Server Running ..',

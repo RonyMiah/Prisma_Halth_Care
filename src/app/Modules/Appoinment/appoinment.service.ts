@@ -4,12 +4,15 @@ import {
   Schedule,
   userRole,
   Doctor,
+  AppointmentStatus,
 } from '@prisma/client';
 import prisma from '../../../shared/prisma';
 import { IAuthUser } from '../../interfaces/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TPaginationOptions } from '../../interfaces/pagination';
 import { paginationHelper } from '../../../helpars/paginateHalpers';
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 
 const createAppoinment = async (user: IAuthUser, payload: any) => {
   const PatientData = await prisma.patient.findUniqueOrThrow({
@@ -157,17 +160,12 @@ const getMyAppointment = async (
     data: result,
   };
 };
-const getAllAppointment = async (
-  filters: any,
-  options: TPaginationOptions
-) => {
+const getAllAppointment = async (filters: any, options: TPaginationOptions) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
 
   const { ...filterData } = filters;
 
   const andConditions: Prisma.AppointmentWhereInput[] = [];
-
-  
 
   if (Object.keys(filterData).length > 0) {
     const filterCondition = Object.keys(filterData).map((key) => ({
@@ -193,11 +191,11 @@ const getAllAppointment = async (
           }
         : { createAt: 'desc' },
     include: {
-            doctor: true,
-            schedule: true,
-            patient:  true
-          }
-        
+      doctor: true,
+      schedule: true,
+      patient: true,
+    },
+
     // time er opore base kore sorting
   });
 
@@ -215,8 +213,93 @@ const getAllAppointment = async (
   };
 };
 
+const changeAppoinmentStatus = async (
+  id: string,
+  status: AppointmentStatus,
+  user: IAuthUser
+) => {
+  const appoinmentData = await prisma.appointment.findUniqueOrThrow({
+    where: {
+      id: id,
+    },
+    include: {
+      doctor: true,
+    },
+  });
+
+  if (user?.role === userRole.DOCTOR) {
+    if (!(user.email === appoinmentData.doctor.email)) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        ' This is not Your Appointment'
+      );
+    }
+  }
+  const result = await prisma.appointment.update({
+    where: {
+      id: id,
+    },
+    data: {
+      status: status,
+    },
+  });
+
+  return result;
+};
+const cancleUnpaidAppoinments = async () => {
+  const thrirtyMinitAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+  const unPaidAppoinments = await prisma.appointment.findMany({
+    where: {
+      createAt: {
+        lte: thrirtyMinitAgo,
+      },
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+  });
+
+  const appoinmentIdesToCancel = unPaidAppoinments.map(
+    (appoinment) => appoinment.id
+  );
+
+  //delete appoinments
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.deleteMany({
+      where: {
+        appointmentId: {
+          in: appoinmentIdesToCancel,
+        },
+      },
+    });
+
+    await tx.appointment.deleteMany({
+      where: {
+        id: {
+          in: appoinmentIdesToCancel,
+        },
+      },
+    });
+
+    for (const unPaidAppoinment of unPaidAppoinments) {
+      await tx.doctorSchedules.updateMany({
+        where: {
+          doctorId: unPaidAppoinment.doctorId,
+          scheduleId: unPaidAppoinment.scheduleId,
+        },
+        data: {
+          isBooked: false,
+        },
+      });
+    }
+  });
+
+  console.log('Updated ..');
+};
 export const AppoinmentServices = {
   createAppoinment,
   getMyAppointment,
-  getAllAppointment
+  getAllAppointment,
+  changeAppoinmentStatus,
+  cancleUnpaidAppoinments,
 };
