@@ -6,6 +6,11 @@ import { TPaginationOptions } from '../../interfaces/pagination';
 import { IAuthUser } from '../../interfaces/common';
 import { paginationHelper } from '../../../helpars/paginateHalpers';
 
+const convertDateTime = async (date: Date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() + offset);
+};
+
 const createSchedule = async (payload: ISchedule): Promise<Schedule[]> => {
   const { startDate, endDate, startTime, endTime } = payload;
   const intervalTime = 30;
@@ -36,9 +41,22 @@ const createSchedule = async (payload: ISchedule): Promise<Schedule[]> => {
     );
 
     while (startDateTime < endDateTime) {
+      //Normal Date Time For Bangladesh
+
+      // const scheduleData = {
+      //   startDateTime: startDateTime,
+      //   endDateTime: addMinutes(startDateTime, intervalTime),
+      // };
+
+      const startDateTimeUTC = await convertDateTime(startDateTime);
+      const endDateTimeUTC = await convertDateTime(
+        addMinutes(startDateTime, intervalTime)
+      );
+
+      //UTC Date Time International
       const scheduleData = {
-        startDateTime: startDateTime,
-        endDateTime: addMinutes(startDateTime, intervalTime),
+        startDateTime: startDateTimeUTC,
+        endDateTime: endDateTimeUTC,
       };
       //   console.log(scheduleData); //Console.log
 
@@ -158,6 +176,19 @@ const getSingleSchedule = async (id: string) => {
       id,
     },
   });
+
+  //** utc thaika jekono local date aa convart hobe  console
+
+  // console.log(
+  // result?.startDateTime.getHours() + ':' + result?.startDateTime.getMinutes()
+  // );
+
+  //**utc Formate
+
+  // console.log(
+  // result?.startDateTime.getUTCHours() + ':' + result?.startDateTime.getUTCMinutes()
+  // );
+
   return result;
 };
 const deleteSchedule = async (id: string) => {

@@ -194,6 +194,8 @@ model Appointment {
   payment         Payment?
   review          Review?
   prescription    Prescription?
+
+  @@map("appoinments")
 }
 
 model Payment {
