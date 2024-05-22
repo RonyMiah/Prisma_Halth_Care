@@ -17,7 +17,7 @@ router.patch(
 );
 
 router.delete(
-  '/:id',
+  '/:id', 
   auth(userRole.ADMIN, userRole.SUPPER_ADMIN),
   DoctorController.deleteDataFromDB
 );
