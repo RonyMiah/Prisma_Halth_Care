@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import { AppoinmentServices } from './app/Modules/Appoinment/appoinment.service';
 import cron from 'node-cron';
 
+//Main App 
 const app = express();
 app.use(
   cors({
